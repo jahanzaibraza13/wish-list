@@ -32,6 +32,16 @@ nelmio_api_doc:
                           type: string
                           default: client_credentials
                           description: Allowed types => client_credentials, password, refresh_token
+                        - name: username
+                          in: formData
+                          required: false
+                          type: string
+                          description: Username
+                        - name: password
+                          in: formData
+                          required: false
+                          type: string
+                          description: Password
                         - name: refresh_token
                           in: formData
                           required: false

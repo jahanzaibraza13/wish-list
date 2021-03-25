@@ -20,12 +20,18 @@ services:
             - '../src/Entity/'
             - '../src/Kernel.php'
             - '../src/Tests/'
+            - '../src/Repository/AbstractRepository.php'
 
     # controllers are imported separately to make sure services can be injected
     # as action arguments even if you don't extend any base controller class
     App\Controller\:
         resource: '../src/Controller/'
         tags: ['controller.service_arguments']
+
+    FOS\UserBundle\Model\UserManager: '@fos_user.user_manager.default'
+    Symfony\Component\Security\Core\Encoder\EncoderFactory: '@security.encoder_factory.generic'
+    FOS\OAuthServerBundle\Entity\AccessTokenManager: '@fos_oauth_server.access_token_manager'
+    Symfony\Component\Validator\Validator\RecursiveValidator: '@validator'
 
     # add more service definitions when explicit configuration is needed
     # please note that last definitions always *replace* previous ones

@@ -9,10 +9,10 @@ fos_oauth_server_token:
 fos_oauth_server_authorize:
   resource: "@FOSOAuthServerBundle/Resources/config/routing/authorize.xml"
 
-#api_routes:
-#  resource: ../src/ApiBundle/Controller/V1
-#  type: annotation
-#  prefix:   /api/1.0/
+api_routes:
+  resource: ../src/ApiBundle/Controller/V1
+  type: annotation
+  prefix:   /api/1.0/
 
 fos_user:
   resource: "@FOSUserBundle/Resources/config/routing/all.xml"

@@ -7,6 +7,6 @@ fos_oauth_server:
   service:
     user_provider: fos_user.user_provider.username_email
     options:
-      auth_code_lifetime: 3600
-      access_token_lifetime: 3600
-      refresh_token_lifetime: 3600
+      auth_code_lifetime: 86400
+      access_token_lifetime: 86400
+      refresh_token_lifetime: 86400
