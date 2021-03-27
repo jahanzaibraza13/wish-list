@@ -132,6 +132,28 @@ class WishlistService
             $wishlist = $this->getById($wishlistId);
             return $this->makeWishListData($wishlist, $getMembers);
         }
+        $wishlists = $this->entityManager->getRepository('App:Wishlist')->findBy(['user' => $user]);
+        /** @var Wishlist $wishlist */
+        foreach ($wishlists as $wishlist) {
+            $returnData[] = $this->makeWishListData($wishlist, $getMembers);
+        }
+
+        return $returnData;
+    }
+
+    /**
+     * @param User $user
+     * @param $getMembers
+     * @param $wishlistId
+     * @return array
+     */
+    public function getMemberWishlist(User $user, $getMembers, $wishlistId): array
+    {
+        $returnData = [];
+        if (!empty($wishlistId)) {
+            $wishlist = $this->getById($wishlistId);
+            return $this->makeWishListData($wishlist, $getMembers);
+        }
         $wishlists = $this->entityManager->getRepository('App:WishlistUser')->findBy(['user' => $user]);
         /** @var WishlistUser $wishlist */
         foreach ($wishlists as $wishlist) {

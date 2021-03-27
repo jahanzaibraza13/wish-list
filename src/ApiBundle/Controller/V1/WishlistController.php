@@ -335,7 +335,7 @@ class WishlistController extends AbstractController
         try {
             $getMembers = !empty($request->get('get_members'));
             $wishlistId = $request->get('wishlist_id');
-            $response = $wishlistService->getWishlist($this->getUser(), $getMembers, $wishlistId);
+            $response = $wishlistService->getMemberWishlist($this->getUser(), $getMembers, $wishlistId);
 
             return $utilService->makeResponse(
                 Response::HTTP_OK,
