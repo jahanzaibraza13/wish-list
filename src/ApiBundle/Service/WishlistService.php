@@ -2,6 +2,7 @@
 
 namespace App\ApiBundle\Service;
 
+use App\ApiBundle\Enum\CommonEnum;
 use App\Entity\User;
 use App\Entity\Wishlist;
 use App\Entity\WishlistUser;
@@ -90,9 +91,10 @@ class WishlistService
     /**
      * @param Wishlist $wishlist
      * @param User $user
+     * @param User $loggedInUser
      * @return bool|string
      */
-    public function addWishlistUser(Wishlist $wishlist, User $user)
+    public function addWishlistUser(Wishlist $wishlist, User $user, User $loggedInUser)
     {
         $wishlistUser = $this->entityManager->getRepository('App:WishlistUser')->findOneBy([
             'user' => $user,
@@ -115,6 +117,13 @@ class WishlistService
         $wishlistUser->setUser($user);
         $this->entityManager->persist($wishlistUser);
         $this->entityManager->flush();
+
+        $this->entityManager->getRepository('App:Notification')->create(
+            CommonEnum::NOTIFICATION_TYPE_ADD_TO_WISHLIST,
+            $user,
+            $loggedInUser,
+            $wishlist->getId()
+        );
 
         return true;
     }

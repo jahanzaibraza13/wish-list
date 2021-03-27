@@ -138,6 +138,13 @@ class UserService
         $this->entityManager->persist($userFriendObj);
         $this->entityManager->flush();
 
+        $this->entityManager->getRepository('App:Notification')->create(
+            CommonEnum::NOTIFICATION_TYPE_ADD_FRIEND,
+            $targetUser,
+            $user,
+            null
+        );
+
         return true;
     }
 

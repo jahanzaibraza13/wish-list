@@ -180,7 +180,7 @@ class WishlistController extends AbstractController
                 );
             }
 
-            $response = $wishlistService->addWishlistUser($wishlist, $user);
+            $response = $wishlistService->addWishlistUser($wishlist, $user, $this->getUser());
             if ($response !== true) {
                 return $utilService->makeResponse(
                     Response::HTTP_BAD_REQUEST,

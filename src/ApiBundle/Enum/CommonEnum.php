@@ -16,4 +16,7 @@ class CommonEnum
     const INTERNAL_SERVER_ERROR_TEXT = "Something went wrong.";
 
     const PER_PAGE_MAX = 50;
+
+    const NOTIFICATION_TYPE_ADD_FRIEND = "add_friend";
+    const NOTIFICATION_TYPE_ADD_TO_WISHLIST = "add_to_wishlist";
 }
