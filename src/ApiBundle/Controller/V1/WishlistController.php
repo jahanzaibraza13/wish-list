@@ -6,6 +6,7 @@ use App\ApiBundle\Enum\CommonEnum;
 use App\ApiBundle\Service\UserService;
 use App\ApiBundle\Service\UtilService;
 use App\ApiBundle\Service\WishlistService;
+use App\Entity\Wishlist;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -346,6 +347,82 @@ class WishlistController extends AbstractController
         } catch (\Exception $exception) {
             $userLogger->error('[get_member_wishlist_api]: ' . $exception->getMessage());
             return $utilService->makeResponse(Response::HTTP_INTERNAL_SERVER_ERROR, CommonEnum::INTERNAL_SERVER_ERROR_TEXT);
+        }
+    }
+
+    /**
+     * @Route(methods={"DELETE"}, path="/user/wishlist/{wishlist_id}", name="delete_wishlist_api")
+     *
+     * @Operation(
+     *     tags={"Wishlist"},
+     *     summary="Delete wishlist",
+     *     @SWG\Parameter(
+     *       type="string",
+     *       name="Authorization",
+     *       in="header",
+     *       required=true,
+     *       description="Bearer your_token, Use client token here"
+     *     ),
+     *     @SWG\Response(
+     *          response=200,
+     *          description="Success"
+     *      ),
+     *      @SWG\Response(
+     *          response=400,
+     *          description="Missing some required params"
+     *      ),
+     *      @SWG\Response(
+     *          response=403,
+     *          description="Invalid Token provided"
+     *      ),
+     *      @SWG\Response(
+     *          response=500,
+     *          description="Some server error"
+     *      ),
+     *     @SWG\Parameter(
+     *          name="wishlist_id",
+     *          in="path",
+     *          type="integer",
+     *          required=true,
+     *          description="Wishlist id"
+     *      ),
+     * )
+     *
+     * @param $wishlist_id
+     * @param Request $request
+     * @param WishlistService $wishlistService
+     * @param UtilService $utilService
+     * @param LoggerInterface $userLogger
+     * @return \Symfony\Component\HttpFoundation\JsonResponse
+     */
+    public function deleteAction(
+        $wishlist_id,
+        WishlistService $wishlistService,
+        UtilService $utilService,
+        LoggerInterface $userLogger
+    ) {
+        try {
+            /** @var Wishlist $wishlist */
+            $wishlist = $wishlistService->getById($wishlist_id);
+
+            if (empty($wishlist) || $wishlist->getUser() != $this->getUser()) {
+                return $utilService->makeResponse(
+                    Response::HTTP_BAD_REQUEST,
+                    "Wishlist not found."
+                );
+            }
+
+            $wishlistService->deleteWishlist($wishlist);
+
+            return $utilService->makeResponse(
+                Response::HTTP_OK,
+                "Action performed successfully.",
+                null,
+                CommonEnum::SUCCESS_RESPONSE_TYPE
+            );
+        } catch (\Exception $exception) {
+            $userLogger->error('[delete_wishlist_api]: ' . $exception->getMessage());
+            return $utilService->makeResponse(Response::HTTP_INTERNAL_SERVER_ERROR, $exception->getMessage());
         }
     }
 }

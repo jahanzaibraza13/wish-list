@@ -171,4 +171,13 @@ class WishlistService
 
         return $returnData;
     }
+
+    /**
+     * @param Wishlist $wishlist
+     */
+    public function deleteWishlist(Wishlist $wishlist)
+    {
+        $this->entityManager->remove($wishlist);
+        $this->entityManager->flush();
+    }
 }

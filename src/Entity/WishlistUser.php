@@ -11,7 +11,7 @@ class WishlistUser extends AbstractEntity
 {
     /**
      * @ORM\ManyToOne(targetEntity="App\Entity\Wishlist")
-     * @ORM\JoinColumn(nullable=false)
+     * @ORM\JoinColumn(nullable=false, onDelete="CASCADE")
      */
     private $wishlist;
 

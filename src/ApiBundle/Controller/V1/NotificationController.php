@@ -172,7 +172,7 @@ class NotificationController extends AbstractController
                 CommonEnum::SUCCESS_RESPONSE_TYPE
             );
         } catch (\Exception $exception) {
-            $userLogger->error('[get_notification_api]: ' . $exception->getMessage());
+            $userLogger->error('[delete_notification_api]: ' . $exception->getMessage());
             return $utilService->makeResponse(Response::HTTP_INTERNAL_SERVER_ERROR, CommonEnum::INTERNAL_SERVER_ERROR_TEXT);
         }
     }
