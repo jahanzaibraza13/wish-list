@@ -129,6 +129,34 @@ class WishlistService
     }
 
     /**
+     * @param Wishlist $wishlist
+     * @param User $loggedInUser
+     * @param User|null $targetUser
+     * @return bool|string
+     */
+    public function removeWishlistUser(Wishlist $wishlist, User $loggedInUser, User $targetUser = null)
+    {
+        $userToRemove = $loggedInUser;
+        if (!empty($targetUser)) {
+            $userToRemove = $targetUser;
+        }
+
+        $wishlistUser = $this->entityManager->getRepository('App:WishlistUser')->findOneBy([
+            'user' => $userToRemove,
+            'wishlist' => $wishlist
+        ]);
+
+        if (empty($wishlistUser)) {
+            return "User is not the member of wishlist.";
+        }
+
+        $this->entityManager->remove($wishlistUser);
+        $this->entityManager->flush();
+
+        return true;
+    }
+
+    /**
      * @param User $user
      * @param $getMembers
      * @param $wishlistId

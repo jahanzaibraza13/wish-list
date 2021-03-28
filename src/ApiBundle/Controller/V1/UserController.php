@@ -438,4 +438,84 @@ class UserController extends AbstractController
             return $utilService->makeResponse(Response::HTTP_INTERNAL_SERVER_ERROR, CommonEnum::INTERNAL_SERVER_ERROR_TEXT);
         }
     }
+
+    /**
+     * @Route(methods={"POST"}, path="/client/forget-password", name="forget_password_api")
+     *
+     * @Operation(
+     *     tags={"User"},
+     *     summary="Forget password",
+     *     @SWG\Parameter(
+     *       type="string",
+     *       name="Authorization",
+     *       in="header",
+     *       required=true,
+     *       description="Bearer your_token, Use client token here"
+     *     ),
+     *     @SWG\Response(
+     *          response=200,
+     *          description="Success"
+     *      ),
+     *      @SWG\Response(
+     *          response=400,
+     *          description="Missing some required params"
+     *      ),
+     *      @SWG\Response(
+     *          response=403,
+     *          description="Invalid Token provided"
+     *      ),
+     *      @SWG\Response(
+     *          response=500,
+     *          description="Some server error"
+     *      ),
+     *      @SWG\Parameter(
+     *          name="email",
+     *          in="formData",
+     *          type="string",
+     *          required=true,
+     *          description="User email"
+     *      )
+     * )
+     *
+     * @param Request $request
+     * @param UserService $userService
+     * @param UtilService $utilService
+     * @param LoggerInterface $userLogger
+     * @return \Symfony\Component\HttpFoundation\JsonResponse
+     */
+    public function forgetPasswordAction(
+        Request $request,
+        UserService $userService,
+        UtilService $utilService,
+        LoggerInterface $userLogger
+    ) {
+        try {
+            $data = $request->request->all();
+            if (empty($data['email'])) {
+                return $utilService->makeResponse(
+                    Response::HTTP_BAD_REQUEST,
+                    "Email is required."
+                );
+            }
+            $user = $userService->getUserByEmail($data['email']);
+
+            if (empty($user)) {
+                return $utilService->makeResponse(
+                    Response::HTTP_BAD_REQUEST,
+                    "User not found."
+                );
+            }
+
+            $userService->sendNewPasswordEmail($user);
+            return $utilService->makeResponse(
+                Response::HTTP_OK,
+                "Email with the new password has been sent to the user.",
+                [],
+                CommonEnum::SUCCESS_RESPONSE_TYPE
+            );
+        } catch (\Exception $exception) {
+            $userLogger->error('[forget_password_api]: ' . $exception->getMessage());
+            return $utilService->makeResponse(Response::HTTP_INTERNAL_SERVER_ERROR, $exception->getMessage());
+        }
+    }
 }

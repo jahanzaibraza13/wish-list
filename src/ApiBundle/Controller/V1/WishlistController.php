@@ -201,6 +201,116 @@ class WishlistController extends AbstractController
         }
     }
 
+    /**
+     * @Route(methods={"POST"}, path="/user/wishlist/{wishlist_id}/user/remove", name="remove_wishlist_user_api")
+     *
+     * @Operation(
+     *     tags={"Wishlist"},
+     *     summary="Remove wish list user",
+     *     @SWG\Parameter(
+     *       type="string",
+     *       name="Authorization",
+     *       in="header",
+     *       required=true,
+     *       description="Bearer your_token, Use client token here"
+     *     ),
+     *     @SWG\Response(
+     *          response=200,
+     *          description="Success"
+     *      ),
+     *      @SWG\Response(
+     *          response=400,
+     *          description="Missing some required params"
+     *      ),
+     *      @SWG\Response(
+     *          response=403,
+     *          description="Invalid Token provided"
+     *      ),
+     *      @SWG\Response(
+     *          response=500,
+     *          description="Some server error"
+     *      ),
+     *      @SWG\Parameter(
+     *          name="wishlist_id",
+     *          in="path",
+     *          type="integer",
+     *          required=true,
+     *          description="Wishlist id"
+     *      ),
+     *      @SWG\Parameter(
+     *          name="user_id",
+     *          in="formData",
+     *          type="integer",
+     *          required=false,
+     *          description="User id"
+     *      )
+     * )
+     *
+     * @param $wishlist_id
+     * @param Request $request
+     * @param WishlistService $wishlistService
+     * @param UserService $userService
+     * @param UtilService $utilService
+     * @param LoggerInterface $userLogger
+     * @return \Symfony\Component\HttpFoundation\JsonResponse
+     */
+    public function removeWishlistUserAction(
+        $wishlist_id,
+        Request $request,
+        WishlistService $wishlistService,
+        UserService $userService,
+        UtilService $utilService,
+        LoggerInterface $userLogger
+    ) {
+        try {
+            $data = $request->request->all();
+            $targetUser = null;
+
+            /** @var Wishlist $wishlist */
+            $wishlist = $wishlistService->getById($wishlist_id);
+            if (empty($wishlist)) {
+                return $utilService->makeResponse(
+                    Response::HTTP_BAD_REQUEST,
+                    "Wishlist not found."
+                );
+            }
+
+            if (!empty($data['user_id']) && $wishlist->getUser() != $this->getUser()) {
+                return $utilService->makeResponse(
+                    Response::HTTP_BAD_REQUEST,
+                    "Wishlist doesn't belong to the logged in user."
+                );
+            }
+
+            if (!empty($data['user_id'])) {
+                $targetUser = $userService->getUserById($data['user_id']);
+                if (empty($targetUser)) {
+                    return $utilService->makeResponse(
+                        Response::HTTP_BAD_REQUEST,
+                        "User not found."
+                    );
+                }
+            }
+
+            $response = $wishlistService->removeWishlistUser($wishlist, $this->getUser(), $targetUser);
+            if ($response !== true) {
+                return $utilService->makeResponse(
+                    Response::HTTP_BAD_REQUEST,
+                    $response
+                );
+            }
+
+            return $utilService->makeResponse(
+                Response::HTTP_OK,
+                "Action performed successfully.",
+                [],
+                CommonEnum::SUCCESS_RESPONSE_TYPE
+            );
+        } catch (\Exception $exception) {
+            $userLogger->error('[remove_wishlist_user_api]: ' . $exception->getMessage());
+            return $utilService->makeResponse(Response::HTTP_INTERNAL_SERVER_ERROR, CommonEnum::INTERNAL_SERVER_ERROR_TEXT);
+        }
+    }
 
     /**
      * @Route(methods={"GET"}, path="/user/wishlist", name="get_wishlist_api")
