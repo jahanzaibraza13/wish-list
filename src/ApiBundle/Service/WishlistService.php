@@ -3,6 +3,7 @@
 namespace App\ApiBundle\Service;
 
 use App\ApiBundle\Enum\CommonEnum;
+use App\Entity\Item;
 use App\Entity\User;
 use App\Entity\Wishlist;
 use App\Entity\WishlistUser;
@@ -151,6 +152,18 @@ class WishlistService
         }
 
         $this->entityManager->remove($wishlistUser);
+        $this->entityManager->flush();
+
+        $itemsWithUser = $this->entityManager->getRepository('App:Item')->findBy([
+            'wishlist' => $wishlist,
+            'user' => $userToRemove
+        ]);
+
+        /** @var Item $item */
+        foreach ($itemsWithUser as $item) {
+            $item->setUser(null);
+        }
+
         $this->entityManager->flush();
 
         return true;
