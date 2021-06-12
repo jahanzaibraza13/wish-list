@@ -9,7 +9,6 @@ use Doctrine\ORM\Mapping as ORM;
  */
 class Wishlist extends AbstractEntity
 {
-
     /**
      * @ORM\Column(type="string", length=500)
      */
@@ -25,6 +24,11 @@ class Wishlist extends AbstractEntity
      * @ORM\JoinColumn(nullable=false)
      */
     private $user;
+
+    /**
+     * @ORM\Column(type="string", length=500, nullable=true)
+     */
+    private $code;
 
     /**
      * @return mixed
@@ -72,5 +76,21 @@ class Wishlist extends AbstractEntity
     public function setUser($user): void
     {
         $this->user = $user;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getCode()
+    {
+        return $this->code;
+    }
+
+    /**
+     * @param mixed $code
+     */
+    public function setCode($code): void
+    {
+        $this->code = $code;
     }
 }

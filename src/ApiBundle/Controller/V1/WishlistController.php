@@ -80,8 +80,10 @@ class WishlistController extends AbstractController
                 );
             }
 
+            $data['code'] = $utilService->getRandomAlphaNumeric(CommonEnum::WISHLIST_CODE_LENGTH);
 
-            $wishlist = $wishlistService->create($this->getUser(), $data['name']);
+
+            $wishlist = $wishlistService->create($this->getUser(), $data);
             return $utilService->makeResponse(
                 Response::HTTP_OK,
                 "Wishlist created successfully.",
@@ -94,9 +96,8 @@ class WishlistController extends AbstractController
         }
     }
 
-
     /**
-     * @Route(methods={"POST"}, path="/user/wishlist/{wishlist_id}/user", name="create_wishlist_user_api")
+     * @Route(methods={"POST"}, path="/user/wishlist/user", name="create_wishlist_user_api")
      *
      * @Operation(
      *     tags={"Wishlist"},
@@ -126,10 +127,17 @@ class WishlistController extends AbstractController
      *      ),
      *      @SWG\Parameter(
      *          name="wishlist_id",
-     *          in="path",
+     *          in="formData",
      *          type="integer",
-     *          required=true,
+     *          required=false,
      *          description="Wishlist id"
+     *      ),
+     *      @SWG\Parameter(
+     *          name="code",
+     *          in="formData",
+     *          type="string",
+     *          required=false,
+     *          description="Code"
      *      ),
      *      @SWG\Parameter(
      *          name="user_id",
@@ -140,7 +148,6 @@ class WishlistController extends AbstractController
      *      )
      * )
      *
-     * @param $wishlist_id
      * @param Request $request
      * @param WishlistService $wishlistService
      * @param UserService $userService
@@ -149,7 +156,6 @@ class WishlistController extends AbstractController
      * @return \Symfony\Component\HttpFoundation\JsonResponse
      */
     public function createWishlistUserAction(
-        $wishlist_id,
         Request $request,
         WishlistService $wishlistService,
         UserService $userService,
@@ -165,7 +171,19 @@ class WishlistController extends AbstractController
                 );
             }
 
-            $wishlist = $wishlistService->getById($wishlist_id);
+            if (empty($data['wishlist_id']) && empty($data['code'])) {
+                return $utilService->makeResponse(
+                    Response::HTTP_BAD_REQUEST,
+                    "Wishlist id or code is required."
+                );
+            }
+
+            if (!empty($data['wishlist_id'])) {
+                $wishlist = $wishlistService->getById($data['wishlist_id']);
+            } else {
+                $wishlist = $wishlistService->getByCode($data['code']);
+            }
+
             if (empty($wishlist)) {
                 return $utilService->makeResponse(
                     Response::HTTP_BAD_REQUEST,
@@ -533,6 +551,83 @@ class WishlistController extends AbstractController
         } catch (\Exception $exception) {
             $userLogger->error('[delete_wishlist_api]: ' . $exception->getMessage());
             return $utilService->makeResponse(Response::HTTP_INTERNAL_SERVER_ERROR, $exception->getMessage());
+        }
+    }
+
+    /**
+     * @Route(methods={"GET"}, path="/user/wishlist/{wishlist_id}/generate-code", name="generate_wishlist_code_api")
+     *
+     * @Operation(
+     *     tags={"Wishlist"},
+     *     summary="Generate wishlist code",
+     *     @SWG\Parameter(
+     *       type="string",
+     *       name="Authorization",
+     *       in="header",
+     *       required=true,
+     *       description="Bearer your_token, Use client token here"
+     *     ),
+     *     @SWG\Response(
+     *          response=200,
+     *          description="Success"
+     *      ),
+     *      @SWG\Response(
+     *          response=400,
+     *          description="Missing some required params"
+     *      ),
+     *      @SWG\Response(
+     *          response=403,
+     *          description="Invalid Token provided"
+     *      ),
+     *      @SWG\Response(
+     *          response=500,
+     *          description="Some server error"
+     *      ),
+     *      @SWG\Parameter(
+     *          name="wishlist_id",
+     *          in="path",
+     *          type="integer",
+     *          required=true,
+     *          description="Wishlist id"
+     *      )
+     * )
+     *
+     * @param Request $request
+     * @param UtilService $utilService
+     * @param WishlistService $wishlistService
+     * @param LoggerInterface $userLogger
+     * @return \Symfony\Component\HttpFoundation\JsonResponse
+     */
+    public function generateWishlistCodeAction(
+        $wishlist_id,
+        UtilService $utilService,
+        WishlistService $wishlistService,
+        LoggerInterface $userLogger
+    ) {
+        try {
+            /** @var Wishlist $wishlist */
+            $wishlist = $wishlistService->getById($wishlist_id);
+
+            if (empty($wishlist) || $wishlist->getUser() != $this->getUser()) {
+                return $utilService->makeResponse(
+                    Response::HTTP_BAD_REQUEST,
+                    "Wishlist not found."
+                );
+            }
+
+            $code = $utilService->getRandomAlphaNumeric(CommonEnum::WISHLIST_CODE_LENGTH);
+            $wishlist->setCode($code);
+            $this->getDoctrine()->getManager()->flush();
+
+            return $utilService->makeResponse(
+                Response::HTTP_OK,
+                "",
+                ['code' => $code],
+                CommonEnum::SUCCESS_RESPONSE_TYPE
+            );
+        } catch (\Exception $exception) {
+            $userLogger->error('[generate_wishlist_code_api]: ' . $exception->getMessage());
+            return $utilService->makeResponse(Response::HTTP_INTERNAL_SERVER_ERROR, CommonEnum::INTERNAL_SERVER_ERROR_TEXT);
         }
     }
 }

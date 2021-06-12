@@ -37,13 +37,14 @@ class WishlistService
 
     /**
      * @param User $user
-     * @param string $name
+     * @param array $data
      * @return array
      */
-    public function create(User $user, string $name): array
+    public function create(User $user, array $data): array
     {
         $wishList = new Wishlist();
-        $wishList->setName($name);
+        $wishList->setName($data['name']);
+        $wishList->setCode($data['code']);
         $wishList->setUser($user);
         $this->entityManager->persist($wishList);
         $this->entityManager->flush();
@@ -65,6 +66,7 @@ class WishlistService
         $data = [
             'id' => $wishlist->getId(),
             'name' => $wishlist->getName(),
+            'code' => $wishlist->getCode(),
             'user' => $this->userService->makeUserDetail($wishlist->getUser())
         ];
 
@@ -90,6 +92,15 @@ class WishlistService
     }
 
     /**
+     * @param $code
+     * @return object|null
+     */
+    public function getByCode($code)
+    {
+        return $this->entityManager->getRepository('App:Wishlist')->findOneBy(['code' => $code]);
+    }
+
+    /**
      * @param Wishlist $wishlist
      * @param User $user
      * @param User $loggedInUser
@@ -104,13 +115,6 @@ class WishlistService
 
         if (!empty($wishlistUser)) {
             return "User already member of wishlist.";
-        }
-
-        $wishlistItems = $this->entityManager->getRepository('App:Item')->findBy(['wishlist' => $wishlist]);
-        $wishlistMembers = $this->entityManager->getRepository('App:WishlistUser')->findBy(['wishlist' => $wishlist]);
-
-        if (count($wishlistItems) <= count($wishlistMembers)) {
-            return "There are not enough items in the wishlist.";
         }
 
         $wishlistUser = new WishlistUser();

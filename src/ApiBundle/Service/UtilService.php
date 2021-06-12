@@ -119,4 +119,15 @@ class UtilService
 
         return true;
     }
+
+    /**
+     * @param $length
+     * @return string
+     * @throws \Exception
+     */
+    public function getRandomAlphaNumeric($length): string
+    {
+        $code = random_bytes($length);
+        return bin2hex($code);
+    }
 }

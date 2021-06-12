@@ -19,4 +19,6 @@ class CommonEnum
 
     const NOTIFICATION_TYPE_ADD_FRIEND = "add_friend";
     const NOTIFICATION_TYPE_ADD_TO_WISHLIST = "add_to_wishlist";
+
+    const WISHLIST_CODE_LENGTH = 5;
 }
