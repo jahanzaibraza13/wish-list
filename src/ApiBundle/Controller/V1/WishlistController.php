@@ -615,9 +615,12 @@ class WishlistController extends AbstractController
                 );
             }
 
-            $code = $utilService->getRandomAlphaNumeric(CommonEnum::WISHLIST_CODE_LENGTH);
-            $wishlist->setCode($code);
-            $this->getDoctrine()->getManager()->flush();
+            $code = $wishlist->getCode();
+            if (empty($code)) {
+                $code = $utilService->getRandomAlphaNumeric(CommonEnum::WISHLIST_CODE_LENGTH);
+                $wishlist->setCode($code);
+                $this->getDoctrine()->getManager()->flush();
+            }
 
             return $utilService->makeResponse(
                 Response::HTTP_OK,
