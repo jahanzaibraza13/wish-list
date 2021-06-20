@@ -25,29 +25,36 @@ class ItemService
      * @var WishlistService
      */
     private $wishlistService;
+    /**
+     * @var UtilService
+     */
+    private $utilService;
 
     /**
-     * UserService constructor.
+     * ItemService constructor.
      * @param UserService $userService
      * @param WishlistService $wishlistService
      * @param EntityManagerInterface $entityManager
+     * @param UtilService $utilService
      */
     public function __construct(
         UserService $userService,
         WishlistService $wishlistService,
-        EntityManagerInterface $entityManager
+        EntityManagerInterface $entityManager,
+        UtilService $utilService
     ) {
         $this->entityManager = $entityManager;
         $this->userService = $userService;
         $this->wishlistService = $wishlistService;
+        $this->utilService = $utilService;
     }
 
     /**
      * @param Wishlist $wishlist
      * @param array $data
-     * @return array
+     * @return Item
      */
-    public function create(Wishlist $wishlist, array $data): array
+    public function create(Wishlist $wishlist, array $data): Item
     {
         $item = new Item();
         $item->setName($data['name']);
@@ -56,7 +63,7 @@ class ItemService
         $this->entityManager->persist($item);
         $this->entityManager->flush();
 
-        return $this->makeItemData($item);
+        return $item;
     }
 
     /**
@@ -73,6 +80,7 @@ class ItemService
             'id' => $item->getId(),
             'name' => $item->getName(),
             'description' => $item->getDescription(),
+            'image' => !empty($item->getImageUrl()) ? $this->utilService->getParameter('SITE_URL') . $item->getImageUrl() : "",
             'wishlist' => $this->wishlistService->makeWishListData($item->getWishlist()),
             'user' => $this->userService->makeUserDetail($item->getUser())
         ];

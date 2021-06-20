@@ -17,8 +17,11 @@ class CommonEnum
 
     const PER_PAGE_MAX = 50;
 
+    const NOTIFICATION_TYPE_REMOVE_FRIEND = "remove_friend";
     const NOTIFICATION_TYPE_ADD_FRIEND = "add_friend";
     const NOTIFICATION_TYPE_ADD_TO_WISHLIST = "add_to_wishlist";
 
     const WISHLIST_CODE_LENGTH = 5;
+
+    const ITEM_LOGO_DIR = "/item_images";
 }

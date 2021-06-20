@@ -1,5 +1,6 @@
 
 ###> symfony/framework-bundle ###
+/.env
 /.env.local
 /.env.local.php
 /.env.*.local
@@ -20,3 +21,4 @@
 ###< symfony/web-server-bundle ###
 
 .idea/
+/public/item_images

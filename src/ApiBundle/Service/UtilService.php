@@ -3,6 +3,7 @@
 namespace App\ApiBundle\Service;
 
 use App\ApiBundle\Enum\CommonEnum;
+use Symfony\Component\HttpFoundation\File\UploadedFile;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\Validator\Validator\RecursiveValidator as Validator;
 use Symfony\Component\Validator\Validator\ValidatorInterface;
@@ -130,4 +131,33 @@ class UtilService
         $code = random_bytes($length);
         return bin2hex($code);
     }
+
+    /**
+     * @return string
+     */
+    public function getProjectRootDir(): string
+    {
+        return $this->params->get('kernel.project_dir');
+    }
+
+    /**
+     * @param UploadedFile $file
+     * @param string $dir
+     * @return string
+     */
+    public function moveFile(UploadedFile $file, string $dir): string
+    {
+        $filePath = "../public" . $dir;
+        $realFilePath = realpath($filePath);
+        if (!$realFilePath) {
+            mkdir($filePath, 0777, true);
+        }
+        $realFilePath = realpath($filePath);
+
+        $fileName = rand(0, 999) . time() . '.' . $file->guessExtension();
+        $file->move($realFilePath, $fileName);
+
+        return $dir . '/' . $fileName;
+    }
+
 }

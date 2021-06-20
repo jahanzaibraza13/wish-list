@@ -175,6 +175,41 @@ class UserService
      * @param User $targetUser
      * @return bool|string
      */
+    public function removeUserFriend(User $user, User $targetUser)
+    {
+        /** @var UserFriend $userFriendObj */
+        $userFriendObj = $this->entityManager->getRepository('App:UserFriend')->findOneBy([
+            'user' => $user,
+            'friend' => $targetUser
+        ]);
+
+        if (empty($userFriendObj)) {
+            $userFriendObj = $this->entityManager->getRepository('App:UserFriend')->findOneBy([
+                'user' => $targetUser,
+                'friend' => $user
+            ]);
+        }
+
+        if (empty($userFriendObj)) {
+            return "This user is not a friend.";
+        }
+
+        $this->entityManager->remove($userFriendObj);
+//        $this->entityManager->getRepository('App:Notification')->create(
+//            CommonEnum::NOTIFICATION_TYPE_REMOVE_FRIEND,
+//            $targetUser,
+//            $user,
+//            null
+//        );
+
+        return true;
+    }
+
+    /**
+     * @param User $user
+     * @param User $targetUser
+     * @return bool|string
+     */
     public function acceptRequest(User $user, User $targetUser)
     {
         /** @var UserFriend $userFriendObj */

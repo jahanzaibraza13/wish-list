@@ -70,7 +70,14 @@ class ItemController extends AbstractController
      *          type="string",
      *          required=false,
      *          description="Description"
-     *      )
+     *      ),
+     *     @SWG\Parameter(
+     *         name="image",
+     *         in="formData",
+     *         type="file",
+     *         required=false,
+     *         description="Wishlist image"
+     *     ),
      * )
      *
      * @param $wishlist_id
@@ -91,6 +98,8 @@ class ItemController extends AbstractController
     ) {
         try {
             $data = $request->request->all();
+            $image = $request->files->get('image');
+
             if (empty($data['name'])) {
                 return $utilService->makeResponse(
                     Response::HTTP_BAD_REQUEST,
@@ -107,14 +116,211 @@ class ItemController extends AbstractController
             }
 
             $item = $itemService->create($wishlist, $data);
+            if (!empty($image)) {
+                $itemImagePath = $utilService->moveFile($image, CommonEnum::ITEM_LOGO_DIR);
+                $item->setImageUrl($itemImagePath);
+            }
+
+            $this->getDoctrine()->getManager()->flush();
+
+            $itemData = $itemService->makeItemData($item);
             return $utilService->makeResponse(
                 Response::HTTP_OK,
                 "Item created successfully.",
-                $item,
+                $itemData,
                 CommonEnum::SUCCESS_RESPONSE_TYPE
             );
         } catch (\Exception $exception) {
             $userLogger->error('[create_wishlist_item_api]: ' . $exception->getMessage());
+            return $utilService->makeResponse(Response::HTTP_INTERNAL_SERVER_ERROR, CommonEnum::INTERNAL_SERVER_ERROR_TEXT);
+        }
+    }
+
+    /**
+     * @Route(methods={"POST"}, path="/user/item/{item_id}", name="update_item_api")
+     *
+     * @Operation(
+     *     tags={"Item"},
+     *     summary="Update item",
+     *     @SWG\Parameter(
+     *       type="string",
+     *       name="Authorization",
+     *       in="header",
+     *       required=true,
+     *       description="Bearer your_token, Use client token here"
+     *     ),
+     *     @SWG\Response(
+     *          response=200,
+     *          description="Success"
+     *      ),
+     *      @SWG\Response(
+     *          response=400,
+     *          description="Missing some required params"
+     *      ),
+     *      @SWG\Response(
+     *          response=403,
+     *          description="Invalid Token provided"
+     *      ),
+     *      @SWG\Response(
+     *          response=500,
+     *          description="Some server error"
+     *      ),
+     *      @SWG\Parameter(
+     *          name="item_id",
+     *          in="path",
+     *          type="integer",
+     *          required=true,
+     *          description="Item id"
+     *      ),
+     *      @SWG\Parameter(
+     *          name="name",
+     *          in="formData",
+     *          type="string",
+     *          required=false,
+     *          description="Name"
+     *      ),
+     *      @SWG\Parameter(
+     *          name="description",
+     *          in="formData",
+     *          type="string",
+     *          required=false,
+     *          description="Description"
+     *      ),
+     *     @SWG\Parameter(
+     *         name="image",
+     *         in="formData",
+     *         type="file",
+     *         required=false,
+     *         description="Wishlist image"
+     *     ),
+     * )
+     *
+     * @param $wishlist_id
+     * @param Request $request
+     * @param WishlistService $wishlistService
+     * @param ItemService $itemService
+     * @param UtilService $utilService
+     * @param LoggerInterface $userLogger
+     * @return \Symfony\Component\HttpFoundation\JsonResponse
+     */
+    public function updateAction(
+        $item_id,
+        Request $request,
+        ItemService $itemService,
+        UtilService $utilService,
+        LoggerInterface $userLogger
+    ) {
+        try {
+            $data = $request->request->all();
+            $image = $request->files->get('image');
+
+            /** @var Item $item */
+            $item = $itemService->getById($item_id);
+            if (empty($item)) {
+                return $utilService->makeResponse(
+                    Response::HTTP_BAD_REQUEST,
+                    "Item not found."
+                );
+            }
+
+            isset($data['name']) ? $item->setName($data['name']) : null;
+            isset($data['description']) ? $item->setDescription($data['description']) : null;
+            if (!empty($image)) {
+                $itemImagePath = $utilService->moveFile($image, CommonEnum::ITEM_LOGO_DIR);
+                $item->setImageUrl($itemImagePath);
+            }
+
+            $this->getDoctrine()->getManager()->flush();
+
+            $itemData = $itemService->makeItemData($item);
+            return $utilService->makeResponse(
+                Response::HTTP_OK,
+                "Item update successfully.",
+                $itemData,
+                CommonEnum::SUCCESS_RESPONSE_TYPE
+            );
+        } catch (\Exception $exception) {
+            $userLogger->error('[update_item_api]: ' . $exception->getMessage());
+            return $utilService->makeResponse(Response::HTTP_INTERNAL_SERVER_ERROR, CommonEnum::INTERNAL_SERVER_ERROR_TEXT);
+        }
+    }
+
+
+    /**
+     * @Route(methods={"DELETE"}, path="/user/item/{item_id}", name="delete_item_api")
+     *
+     * @Operation(
+     *     tags={"Item"},
+     *     summary="Delete item",
+     *     @SWG\Parameter(
+     *       type="string",
+     *       name="Authorization",
+     *       in="header",
+     *       required=true,
+     *       description="Bearer your_token, Use client token here"
+     *     ),
+     *     @SWG\Response(
+     *          response=200,
+     *          description="Success"
+     *      ),
+     *      @SWG\Response(
+     *          response=400,
+     *          description="Missing some required params"
+     *      ),
+     *      @SWG\Response(
+     *          response=403,
+     *          description="Invalid Token provided"
+     *      ),
+     *      @SWG\Response(
+     *          response=500,
+     *          description="Some server error"
+     *      ),
+     *      @SWG\Parameter(
+     *          name="item_id",
+     *          in="path",
+     *          type="integer",
+     *          required=true,
+     *          description="Item id"
+     *      ),
+     * )
+     *
+     * @param $wishlist_id
+     * @param Request $request
+     * @param WishlistService $wishlistService
+     * @param ItemService $itemService
+     * @param UtilService $utilService
+     * @param LoggerInterface $userLogger
+     * @return \Symfony\Component\HttpFoundation\JsonResponse
+     */
+    public function deleteAction(
+        $item_id,
+        Request $request,
+        ItemService $itemService,
+        UtilService $utilService,
+        LoggerInterface $userLogger
+    ) {
+        try {
+
+            /** @var Item $item */
+            $item = $itemService->getById($item_id);
+            if (empty($item)) {
+                return $utilService->makeResponse(
+                    Response::HTTP_BAD_REQUEST,
+                    "Item not found."
+                );
+            }
+
+            $this->getDoctrine()->getManager()->remove($item);
+            $this->getDoctrine()->getManager()->flush();
+
+            return $utilService->makeResponse(
+                Response::HTTP_OK,
+                "Item deleted successfully.",
+                [],
+                CommonEnum::SUCCESS_RESPONSE_TYPE
+            );
+        } catch (\Exception $exception) {
+            $userLogger->error('[delete_item_api]: ' . $exception->getMessage());
             return $utilService->makeResponse(Response::HTTP_INTERNAL_SERVER_ERROR, CommonEnum::INTERNAL_SERVER_ERROR_TEXT);
         }
     }

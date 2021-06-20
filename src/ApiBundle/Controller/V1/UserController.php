@@ -5,6 +5,7 @@ namespace App\ApiBundle\Controller\V1;
 use App\ApiBundle\Enum\CommonEnum;
 use App\ApiBundle\Service\UserService;
 use App\ApiBundle\Service\UtilService;
+use FOS\UserBundle\Model\UserManager;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;
@@ -440,11 +441,11 @@ class UserController extends AbstractController
     }
 
     /**
-     * @Route(methods={"POST"}, path="/client/forget-password", name="forget_password_api")
+     * @Route(methods={"POST"}, path="/user/remove-friend", name="remove_friend_api")
      *
      * @Operation(
      *     tags={"User"},
-     *     summary="Forget password",
+     *     summary="Remove user friend",
      *     @SWG\Parameter(
      *       type="string",
      *       name="Authorization",
@@ -452,6 +453,87 @@ class UserController extends AbstractController
      *       required=true,
      *       description="Bearer your_token, Use client token here"
      *     ),
+     *     @SWG\Response(
+     *          response=200,
+     *          description="Success"
+     *      ),
+     *      @SWG\Response(
+     *          response=400,
+     *          description="Missing some required params"
+     *      ),
+     *      @SWG\Response(
+     *          response=403,
+     *          description="Invalid Token provided"
+     *      ),
+     *      @SWG\Response(
+     *          response=500,
+     *          description="Some server error"
+     *      ),
+     *      @SWG\Parameter(
+     *          name="user_id",
+     *          in="formData",
+     *          type="integer",
+     *          required=true,
+     *          description="User id"
+     *      ),
+     * )
+     *
+     * @param Request $request
+     * @param UserService $userService
+     * @param UtilService $utilService
+     * @param LoggerInterface $userLogger
+     * @return \Symfony\Component\HttpFoundation\JsonResponse
+     */
+    public function removeFriendAction(
+        Request $request,
+        UserService $userService,
+        UtilService $utilService,
+        LoggerInterface $userLogger
+    ) {
+        try {
+            $data = $request->request->all();
+            if (empty($data['user_id'])) {
+                return $utilService->makeResponse(
+                    Response::HTTP_BAD_REQUEST,
+                    "User id is required."
+                );
+            }
+            $targetUser = $userService->getUserById($data['user_id']);
+
+            if (empty($targetUser)) {
+                return $utilService->makeResponse(
+                    Response::HTTP_BAD_REQUEST,
+                    "User not found."
+                );
+            }
+
+            $response = $userService->removeUserFriend($this->getUser(), $targetUser);
+
+            if ($response !== true) {
+                return $utilService->makeResponse(
+                    Response::HTTP_BAD_REQUEST,
+                    $response
+                );
+            }
+
+            return $utilService->makeResponse(
+                Response::HTTP_OK,
+                "Action performed successfully.",
+                [],
+                CommonEnum::SUCCESS_RESPONSE_TYPE
+            );
+        } catch (\Exception $exception) {
+            $userLogger->error('[add_friend_api]: ' . $exception->getMessage());
+            return $utilService->makeResponse(Response::HTTP_INTERNAL_SERVER_ERROR, CommonEnum::INTERNAL_SERVER_ERROR_TEXT);
+        }
+    }
+
+    /**
+     * @Route(methods={"POST"}, path="/client/forget-password", name="forget_password_api")
+     *
+     * @Operation(
+     *     tags={"User"},
+     *     summary="Forget password",
      *     @SWG\Response(
      *          response=200,
      *          description="Success"
@@ -482,6 +564,7 @@ class UserController extends AbstractController
      * @param UtilService $utilService
      * @param LoggerInterface $userLogger
      * @return \Symfony\Component\HttpFoundation\JsonResponse
+     * @throws \Symfony\Component\Mailer\Exception\TransportExceptionInterface
      */
     public function forgetPasswordAction(
         Request $request,
@@ -515,6 +598,112 @@ class UserController extends AbstractController
             );
         } catch (\Exception $exception) {
             $userLogger->error('[forget_password_api]: ' . $exception->getMessage());
+            return $utilService->makeResponse(Response::HTTP_INTERNAL_SERVER_ERROR, $exception->getMessage());
+        }
+    }
+
+    /**
+     * @Route(methods={"PUT"}, path="/user/update-user", name="update_user_api")
+     *
+     * @Operation(
+     *     tags={"User"},
+     *     summary="Update user",
+     *     @SWG\Parameter(
+     *       type="string",
+     *       name="Authorization",
+     *       in="header",
+     *       required=true,
+     *       description="Bearer your_token, Use client token here"
+     *     ),
+     *     @SWG\Response(
+     *          response=200,
+     *          description="Success"
+     *      ),
+     *      @SWG\Response(
+     *          response=400,
+     *          description="Missing some required params"
+     *      ),
+     *      @SWG\Response(
+     *          response=403,
+     *          description="Invalid Token provided"
+     *      ),
+     *      @SWG\Response(
+     *          response=500,
+     *          description="Some server error"
+     *      ),
+     *      @SWG\Parameter(
+     *          name="password",
+     *          in="formData",
+     *          type="string",
+     *          required=false,
+     *          description="Password"
+     *      ),
+     *      @SWG\Parameter(
+     *          name="username",
+     *          in="formData",
+     *          type="string",
+     *          required=false,
+     *          description="username"
+     *      ),
+     *      @SWG\Parameter(
+     *          name="first_name",
+     *          in="formData",
+     *          type="string",
+     *          required=false,
+     *          description="First name"
+     *      ),
+     *      @SWG\Parameter(
+     *          name="last_name",
+     *          in="formData",
+     *          type="string",
+     *          required=false,
+     *          description="Last name"
+     *      ),
+     * )
+     *
+     * @param Request $request
+     * @param UserService $userService
+     * @param UserManager $userManager
+     * @param UtilService $utilService
+     * @param LoggerInterface $userLogger
+     * @return \Symfony\Component\HttpFoundation\JsonResponse
+     */
+    public function updateUserdAction(
+        Request $request,
+        UserService $userService,
+        UserManager $userManager,
+        UtilService $utilService,
+        LoggerInterface $userLogger
+    ) {
+        try {
+            $user = $this->getUser();
+            $data = $request->request->all();
+            if (isset($data['username']) && !empty($data['username'])) {
+                $userExist = $userService->getUserByUsername($data['username']);
+                if ($userExist && $user != $userExist) {
+                    return $utilService->makeResponse(
+                        Response::HTTP_BAD_REQUEST,
+                        "User already exists with this username."
+                    );
+                }
+
+                $user->setUsername($data['username']);
+            }
+
+            isset($data['password']) && !empty($data['password']) ? $user->setPlainPassword($data['password']) : null;
+            isset($data['first_name']) && !empty($data['first_name']) ? $user->setFirstName($data['first_name']) : null;
+            isset($data['last_name']) && !empty($data['last_name']) ? $user->setLastName($data['last_name']) : null;
+
+            $userManager->updateUser($user);
+
+            return $utilService->makeResponse(
+                Response::HTTP_OK,
+                "User updated successfully.",
+                [],
+                CommonEnum::SUCCESS_RESPONSE_TYPE
+            );
+        } catch (\Exception $exception) {
+            $userLogger->error('[update_user_api]: ' . $exception->getMessage());
             return $utilService->makeResponse(Response::HTTP_INTERNAL_SERVER_ERROR, $exception->getMessage());
         }
     }

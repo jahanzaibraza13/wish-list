@@ -20,6 +20,11 @@ class Item extends AbstractEntity
     private $description;
 
     /**
+     * @ORM\Column(type="string", nullable=true)
+     */
+    private $imageUrl;
+
+    /**
      * @ORM\ManyToOne(targetEntity="App\Entity\User")
      * @ORM\JoinColumn(nullable=true)
      */
@@ -93,5 +98,21 @@ class Item extends AbstractEntity
     public function setWishlist($wishlist): void
     {
         $this->wishlist = $wishlist;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getImageUrl()
+    {
+        return $this->imageUrl;
+    }
+
+    /**
+     * @param mixed $imageUrl
+     */
+    public function setImageUrl($imageUrl): void
+    {
+        $this->imageUrl = $imageUrl;
     }
 }
