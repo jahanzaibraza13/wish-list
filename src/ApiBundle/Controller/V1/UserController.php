@@ -707,4 +707,60 @@ class UserController extends AbstractController
             return $utilService->makeResponse(Response::HTTP_INTERNAL_SERVER_ERROR, $exception->getMessage());
         }
     }
+
+    /**
+     * @Route(methods={"DELETE"}, path="/user/user", name="delete_user_api")
+     *
+     * @Operation(
+     *     tags={"User"},
+     *     summary="Delete users",
+     *     @SWG\Parameter(
+     *       type="string",
+     *       name="Authorization",
+     *       in="header",
+     *       required=true,
+     *       description="Bearer your_token, Use user token here"
+     *     ),
+     *     @SWG\Response(
+     *          response=200,
+     *          description="Success"
+     *      ),
+     *      @SWG\Response(
+     *          response=400,
+     *          description="Missing some required params"
+     *      ),
+     *      @SWG\Response(
+     *          response=403,
+     *          description="Invalid Token provided"
+     *      ),
+     *      @SWG\Response(
+     *          response=500,
+     *          description="Some server error"
+     *      )
+     * )
+     *
+     * @param UtilService $utilService
+     * @param LoggerInterface $userLogger
+     * @return \Symfony\Component\HttpFoundation\JsonResponse
+     */
+    public function deleteUserAction(
+        UtilService $utilService,
+        LoggerInterface $userLogger
+    ): \Symfony\Component\HttpFoundation\JsonResponse
+    {
+        try {
+            $this->getDoctrine()->getManager()->remove($this->getUser());
+            $this->getDoctrine()->getManager()->flush();
+
+            return $utilService->makeResponse(
+                Response::HTTP_OK,
+                "User deleted successfully.",
+                [],
+                CommonEnum::SUCCESS_RESPONSE_TYPE
+            );
+        } catch (\Exception $exception) {
+            $userLogger->error('[delete_friend_api]: ' . $exception->getMessage());
+            return $utilService->makeResponse(Response::HTTP_INTERNAL_SERVER_ERROR, $exception->getMessage());
+        }
+    }
 }

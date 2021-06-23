@@ -17,6 +17,7 @@ class Notification extends AbstractEntity
 
     /**
      * @ORM\ManyToOne(targetEntity=User::class, inversedBy="notifications")
+     * @ORM\JoinColumn(onDelete="CASCADE")
      */
     private $user;
 
