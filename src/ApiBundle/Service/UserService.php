@@ -195,6 +195,7 @@ class UserService
         }
 
         $this->entityManager->remove($userFriendObj);
+        $this->entityManager->flush();
 //        $this->entityManager->getRepository('App:Notification')->create(
 //            CommonEnum::NOTIFICATION_TYPE_REMOVE_FRIEND,
 //            $targetUser,
