@@ -22,6 +22,15 @@ use Swagger\Annotations as SWG;
 class ItemController extends AbstractController
 {
     /**
+     * @Route(methods={"GET"}, path="/test", name="test")
+     *
+     */
+    public function test()
+    {
+        phpinfo();
+    }
+
+    /**
      * @Route(methods={"POST"}, path="/user/wishlist/{wishlist_id}/item", name="create_wishlist_item_api")
      *
      * @Operation(
