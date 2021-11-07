@@ -24,4 +24,5 @@ class CommonEnum
     const WISHLIST_CODE_LENGTH = 5;
 
     const ITEM_LOGO_DIR = "/item_images";
+    const USER_IMAGES_DIR = "/user_images";
 }

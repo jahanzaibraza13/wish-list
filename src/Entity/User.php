@@ -35,6 +35,11 @@ class User extends BaseUser
      */
     private $notifications;
 
+    /**
+     * @ORM\Column(type="string", nullable=true)
+     */
+    private $imageUrl;
+
     public function __construct()
     {
         parent::__construct();
@@ -97,6 +102,10 @@ class User extends BaseUser
         return $this->notifications;
     }
 
+    /**
+     * @param Notification $notification
+     * @return $this
+     */
     public function addNotification(Notification $notification): self
     {
         if (!$this->notifications->contains($notification)) {
@@ -107,6 +116,10 @@ class User extends BaseUser
         return $this;
     }
 
+    /**
+     * @param Notification $notification
+     * @return $this
+     */
     public function removeNotification(Notification $notification): self
     {
         if ($this->notifications->removeElement($notification)) {
@@ -117,5 +130,21 @@ class User extends BaseUser
         }
 
         return $this;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getImageUrl()
+    {
+        return $this->imageUrl;
+    }
+
+    /**
+     * @param mixed $imageUrl
+     */
+    public function setImageUrl($imageUrl): void
+    {
+        $this->imageUrl = $imageUrl;
     }
 }
