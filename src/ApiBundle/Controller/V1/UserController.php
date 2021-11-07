@@ -5,9 +5,11 @@ namespace App\ApiBundle\Controller\V1;
 use App\ApiBundle\Enum\CommonEnum;
 use App\ApiBundle\Service\UserService;
 use App\ApiBundle\Service\UtilService;
+use App\Entity\User;
 use FOS\UserBundle\Model\UserManager;
 use Psr\Log\LoggerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
@@ -69,7 +71,7 @@ class UserController extends AbstractController
      * @param UserService $userService
      * @param UtilService $utilService
      * @param LoggerInterface $userLogger
-     * @return \Symfony\Component\HttpFoundation\JsonResponse
+     * @return JsonResponse
      */
     public function getAllUserAction(
         Request $request,
@@ -135,7 +137,7 @@ class UserController extends AbstractController
      * @param UserService $userService
      * @param UtilService $utilService
      * @param LoggerInterface $userLogger
-     * @return \Symfony\Component\HttpFoundation\JsonResponse
+     * @return JsonResponse
      */
     public function getFriendAction(
         UserService $userService,
@@ -191,7 +193,7 @@ class UserController extends AbstractController
      * @param UserService $userService
      * @param UtilService $utilService
      * @param LoggerInterface $userLogger
-     * @return \Symfony\Component\HttpFoundation\JsonResponse
+     * @return JsonResponse
      */
     public function getAction(
         UserService $userService,
@@ -283,7 +285,7 @@ class UserController extends AbstractController
      * @param UserService $userService
      * @param UtilService $utilService
      * @param LoggerInterface $userLogger
-     * @return \Symfony\Component\HttpFoundation\JsonResponse
+     * @return JsonResponse
      */
     public function registerAction(
         Request $request,
@@ -383,7 +385,7 @@ class UserController extends AbstractController
      * @param UserService $userService
      * @param UtilService $utilService
      * @param LoggerInterface $userLogger
-     * @return \Symfony\Component\HttpFoundation\JsonResponse
+     * @return JsonResponse
      */
     public function makeFriendAction(
         Request $request,
@@ -482,7 +484,7 @@ class UserController extends AbstractController
      * @param UserService $userService
      * @param UtilService $utilService
      * @param LoggerInterface $userLogger
-     * @return \Symfony\Component\HttpFoundation\JsonResponse
+     * @return JsonResponse
      */
     public function removeFriendAction(
         Request $request,
@@ -563,7 +565,7 @@ class UserController extends AbstractController
      * @param UserService $userService
      * @param UtilService $utilService
      * @param LoggerInterface $userLogger
-     * @return \Symfony\Component\HttpFoundation\JsonResponse
+     * @return JsonResponse
      * @throws \Symfony\Component\Mailer\Exception\TransportExceptionInterface
      */
     public function forgetPasswordAction(
@@ -603,7 +605,7 @@ class UserController extends AbstractController
     }
 
     /**
-     * @Route(methods={"PUT"}, path="/user/update-user", name="update_user_api")
+     * @Route(methods={"POST"}, path="/user/update-user", name="update_user_api")
      *
      * @Operation(
      *     tags={"User"},
@@ -659,6 +661,13 @@ class UserController extends AbstractController
      *          required=false,
      *          description="Last name"
      *      ),
+     *     @SWG\Parameter(
+     *         name="image",
+     *         in="formData",
+     *         type="file",
+     *         required=false,
+     *         description="User image"
+     *     ),
      * )
      *
      * @param Request $request
@@ -666,7 +675,7 @@ class UserController extends AbstractController
      * @param UserManager $userManager
      * @param UtilService $utilService
      * @param LoggerInterface $userLogger
-     * @return \Symfony\Component\HttpFoundation\JsonResponse
+     * @return JsonResponse
      */
     public function updateUserdAction(
         Request $request,
@@ -674,7 +683,8 @@ class UserController extends AbstractController
         UserManager $userManager,
         UtilService $utilService,
         LoggerInterface $userLogger
-    ) {
+    ): JsonResponse
+    {
         try {
             $user = $this->getUser();
             $data = $request->request->all();
@@ -693,7 +703,11 @@ class UserController extends AbstractController
             isset($data['password']) && !empty($data['password']) ? $user->setPlainPassword($data['password']) : null;
             isset($data['first_name']) && !empty($data['first_name']) ? $user->setFirstName($data['first_name']) : null;
             isset($data['last_name']) && !empty($data['last_name']) ? $user->setLastName($data['last_name']) : null;
-
+            $image = $request->files->get('image');
+            if (!empty($image)) {
+                $imagePath = $utilService->moveFile($image, CommonEnum::USER_IMAGES_DIR);
+                $user->setImageUrl($imagePath);
+            }
             $userManager->updateUser($user);
 
             return $utilService->makeResponse(
@@ -741,14 +755,28 @@ class UserController extends AbstractController
      *
      * @param UtilService $utilService
      * @param LoggerInterface $userLogger
-     * @return \Symfony\Component\HttpFoundation\JsonResponse
+     * @return JsonResponse
      */
     public function deleteUserAction(
         UtilService $utilService,
         LoggerInterface $userLogger
-    ): \Symfony\Component\HttpFoundation\JsonResponse
+    ): JsonResponse
     {
         try {
+            /** @var User $user */
+            $user = $this->getUser();
+            foreach ($user->getNotifications() as $notification) {
+                $this->getDoctrine()->getManager()->remove($notification);
+            }
+            $this->getDoctrine()->getManager()->flush();
+
+            $byUserNotifications = $this->getDoctrine()->getManager()->getRepository('App:Notification')
+                ->findBy(['byUser' => $user]);
+            foreach ($byUserNotifications as $notification) {
+                $this->getDoctrine()->getManager()->remove($notification);
+            }
+            $this->getDoctrine()->getManager()->flush();
+
             $this->getDoctrine()->getManager()->remove($this->getUser());
             $this->getDoctrine()->getManager()->flush();
 

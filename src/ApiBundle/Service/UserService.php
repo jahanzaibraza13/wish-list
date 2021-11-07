@@ -36,6 +36,10 @@ class UserService
      * @var MailerInterface
      */
     private $mailer;
+    /**
+     * @var UtilService
+     */
+    private $utilService;
 
     /**
      * UserService constructor.
@@ -43,17 +47,20 @@ class UserService
      * @param EntityManagerInterface $entityManager
      * @param \Twig_Environment $templating
      * @param MailerInterface $mailer
+     * @param UtilService $utilService
      */
     public function __construct(
         UserManager $userManager,
         EntityManagerInterface $entityManager,
         \Twig_Environment $templating,
-        MailerInterface $mailer
+        MailerInterface $mailer,
+        UtilService $utilService
     ) {
         $this->userManager = $userManager;
         $this->entityManager = $entityManager;
         $this->templating = $templating;
         $this->mailer = $mailer;
+        $this->utilService = $utilService;
     }
 
     /**
@@ -92,7 +99,8 @@ class UserService
             'first_name' => $user->getFirstName(),
             'last_name' => $user->getLastName(),
             'username' => $user->getUsername(),
-            'email' => $user->getEmail()
+            'email' => $user->getEmail(),
+            'image' => !empty($user->getImageUrl()) ? $this->utilService->getParameter('SITE_URL') . $user->getImageUrl() : ""
         ];
 
         if ($requestAccepted !== null) {
