@@ -600,7 +600,7 @@ class UserController extends AbstractController
             );
         } catch (\Exception $exception) {
             $userLogger->error('[forget_password_api]: ' . $exception->getMessage());
-            return $utilService->makeResponse(Response::HTTP_INTERNAL_SERVER_ERROR, $exception->getMessage());
+            return $utilService->makeResponse(Response::HTTP_INTERNAL_SERVER_ERROR, CommonEnum::INTERNAL_SERVER_ERROR_TEXT);
         }
     }
 
@@ -718,7 +718,7 @@ class UserController extends AbstractController
             );
         } catch (\Exception $exception) {
             $userLogger->error('[update_user_api]: ' . $exception->getMessage());
-            return $utilService->makeResponse(Response::HTTP_INTERNAL_SERVER_ERROR, $exception->getMessage());
+            return $utilService->makeResponse(Response::HTTP_INTERNAL_SERVER_ERROR, CommonEnum::INTERNAL_SERVER_ERROR_TEXT);
         }
     }
 
@@ -788,7 +788,67 @@ class UserController extends AbstractController
             );
         } catch (\Exception $exception) {
             $userLogger->error('[delete_friend_api]: ' . $exception->getMessage());
-            return $utilService->makeResponse(Response::HTTP_INTERNAL_SERVER_ERROR, $exception->getMessage());
+            return $utilService->makeResponse(Response::HTTP_INTERNAL_SERVER_ERROR, CommonEnum::INTERNAL_SERVER_ERROR_TEXT);
+        }
+    }
+
+
+    /**
+     * @Route(methods={"GET"}, path="/user/subscribe", name="subscribe_user_api")
+     *
+     * @Operation(
+     *     tags={"User"},
+     *     summary="Subscribe user",
+     *     @SWG\Parameter(
+     *       type="string",
+     *       name="Authorization",
+     *       in="header",
+     *       required=true,
+     *       description="Bearer your_token, Use user token here"
+     *     ),
+     *     @SWG\Response(
+     *          response=200,
+     *          description="Success"
+     *      ),
+     *      @SWG\Response(
+     *          response=400,
+     *          description="Missing some required params"
+     *      ),
+     *      @SWG\Response(
+     *          response=403,
+     *          description="Invalid Token provided"
+     *      ),
+     *      @SWG\Response(
+     *          response=500,
+     *          description="Some server error"
+     *      )
+     * )
+     *
+     * @param UserService $userService
+     * @param UtilService $utilService
+     * @param LoggerInterface $userLogger
+     * @return JsonResponse
+     */
+    public function subscribeUserAction(
+        UserService $userService,
+        UtilService $utilService,
+        LoggerInterface $userLogger
+    ): JsonResponse
+    {
+        try {
+            /** @var User $user */
+            $user = $this->getUser();
+            $userService->subscribeUser($user);
+
+            return $utilService->makeResponse(
+                Response::HTTP_OK,
+                "User subscribed successfully.",
+                null,
+                CommonEnum::SUCCESS_RESPONSE_TYPE
+            );
+        } catch (\Exception $exception) {
+            $userLogger->error('[subscribe_user_api]: ' . $exception->getMessage());
+            return $utilService->makeResponse(Response::HTTP_INTERNAL_SERVER_ERROR, CommonEnum::INTERNAL_SERVER_ERROR_TEXT);
         }
     }
 }

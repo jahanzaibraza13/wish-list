@@ -40,6 +40,14 @@ class User extends BaseUser
      */
     private $imageUrl;
 
+    /**
+     * @ORM\OneToOne(targetEntity=UserSubscription::class, mappedBy="user", cascade={"persist", "remove"})
+     */
+    private $userSubscription;
+
+    /**
+     *
+     */
     public function __construct()
     {
         parent::__construct();
@@ -146,5 +154,29 @@ class User extends BaseUser
     public function setImageUrl($imageUrl): void
     {
         $this->imageUrl = $imageUrl;
+    }
+
+    /**
+     * @return UserSubscription|null
+     */
+    public function getUserSubscription(): ?UserSubscription
+    {
+        return $this->userSubscription;
+    }
+
+    /**
+     * @param UserSubscription $userSubscription
+     * @return $this
+     */
+    public function setUserSubscription(UserSubscription $userSubscription): self
+    {
+        // set the owning side of the relation if necessary
+        if ($userSubscription->getUser() !== $this) {
+            $userSubscription->setUser($this);
+        }
+
+        $this->userSubscription = $userSubscription;
+
+        return $this;
     }
 }

@@ -5,6 +5,7 @@ namespace App\ApiBundle\Service;
 use App\ApiBundle\Enum\CommonEnum;
 use App\Entity\User;
 use App\Entity\UserFriend;
+use App\Entity\UserSubscription;
 use Doctrine\ORM\EntityManagerInterface;
 use FOS\UserBundle\Model\UserManager;
 use Symfony\Component\Mailer\MailerInterface;
@@ -94,13 +95,20 @@ class UserService
             return null;
         }
 
+        $isSubscribed = false;
+        if ($user->getUserSubscription()) {
+            $daysAfterSubscription = $user->getUserSubscription()->getSubscriptionTime()->diff(new \DateTime('now'));
+            $isSubscribed = $daysAfterSubscription->days < 30;
+        }
+
         $data = [
             'id' => $user->getId(),
             'first_name' => $user->getFirstName(),
             'last_name' => $user->getLastName(),
             'username' => $user->getUsername(),
             'email' => $user->getEmail(),
-            'image' => !empty($user->getImageUrl()) ? $this->utilService->getParameter('SITE_URL') . $user->getImageUrl() : ""
+            'image' => !empty($user->getImageUrl()) ? $this->utilService->getParameter('SITE_URL') . $user->getImageUrl() : "",
+            'is_subscribed' => $isSubscribed
         ];
 
         if ($requestAccepted !== null) {
@@ -345,4 +353,20 @@ class UserService
         $this->mailer->send($email);
     }
 
+    /**
+     * @param User $user
+     * @return void
+     */
+    public function subscribeUser(User $user)
+    {
+        $userSubscription = $user->getUserSubscription();
+        if (empty($userSubscription)) {
+            $userSubscription = new UserSubscription();
+            $userSubscription->setUser($user);
+        }
+
+        $userSubscription->setSubscriptionTime(new \DateTime('now'));
+        $this->entityManager->persist($userSubscription);
+        $this->entityManager->flush();
+    }
 }
