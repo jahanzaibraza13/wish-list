@@ -20,7 +20,7 @@ security:
             pattern:    ^/api(\/\d\.\d)?/client
             fos_oauth:  true
             stateless:  true
-            anonymous:  false
+            anonymous:  true
 
         # All APIs with pattern /api/user will be used after user authentication
         user_api:

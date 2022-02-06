@@ -600,7 +600,7 @@ class UserController extends AbstractController
             );
         } catch (\Exception $exception) {
             $userLogger->error('[forget_password_api]: ' . $exception->getMessage());
-            return $utilService->makeResponse(Response::HTTP_INTERNAL_SERVER_ERROR, CommonEnum::INTERNAL_SERVER_ERROR_TEXT);
+            return $utilService->makeResponse(Response::HTTP_INTERNAL_SERVER_ERROR, $exception->getMessage());
         }
     }
 
